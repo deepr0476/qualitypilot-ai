@@ -2477,6 +2477,9 @@ async function executeOmniStep(page, rawStep, sfSkills = null, tcContext = {}, s
     case 'FILL_OMNI_FIELD': {
       const [elementName, ...valueParts] = args;
       const cleanVal = valueParts.join(' ').replace(/^["']|["']$/g, '').trim();
+      if (tcContext) {
+        tcContext[elementName] = cleanVal;
+      }
       await fillOmniField(page, elementName, cleanVal);
       break;
     }
@@ -2485,6 +2488,9 @@ async function executeOmniStep(page, rawStep, sfSkills = null, tcContext = {}, s
     case 'SELECT_OMNI_DROPDOWN': {
       const [elementName, ...optionParts] = args;
       const cleanOpt = optionParts.join(' ').replace(/^["']|["']$/g, '').trim();
+      if (tcContext) {
+        tcContext[elementName] = cleanOpt;
+      }
       await selectOmniOption(page, elementName, cleanOpt);
       break;
     }
@@ -2493,6 +2499,9 @@ async function executeOmniStep(page, rawStep, sfSkills = null, tcContext = {}, s
     case 'CHECK_OMNI_BOX': {
       const [elementName, checkedStr] = args;
       const cleanChecked = (checkedStr || '').replace(/^["']|["']$/g, '').toLowerCase() === 'true';
+      if (tcContext) {
+        tcContext[elementName] = cleanChecked;
+      }
       await setOmniCheckbox(page, elementName, cleanChecked);
       break;
     }
@@ -2508,10 +2517,12 @@ async function executeOmniStep(page, rawStep, sfSkills = null, tcContext = {}, s
       // Execute IPCreateTelecomCustomer Integration Procedure directly in connected Salesforce Org
       if (sfSkills && sfSkills.conn && sfSkills.conn.accessToken) {
         try {
+          const genFirst = faker.person.firstName();
+          const genLast = faker.person.lastName();
           const tcData = {
-            First_Name__c: tcContext.FirstName || tcContext.firstName || faker.person.firstName(),
-            Last_Name__c: tcContext.LastName || tcContext.lastName || faker.person.lastName(),
-            Email_Address__c: tcContext.EmailAddress || tcContext.email || faker.internet.email().toLowerCase(),
+            First_Name__c: tcContext.FirstName || tcContext.firstName || genFirst,
+            Last_Name__c: tcContext.LastName || tcContext.lastName || genLast,
+            Email_Address__c: tcContext.EmailAddress || tcContext.email || faker.internet.email({ firstName: genFirst, lastName: genLast }).toLowerCase(),
             Mobile_Number__c: String(tcContext.MobileNumber || tcContext.mobile || faker.string.numeric(10)),
             Customer_Type__c: tcContext.CustomerType || tcContext.customerType || 'Buisness',
             Service_Type__c: tcContext.ServiceType || tcContext.serviceType || 'BroadBand',
@@ -2528,6 +2539,8 @@ async function executeOmniStep(page, rawStep, sfSkills = null, tcContext = {}, s
           const created = await sfSkills.conn.sobject('Telecom_Customer__c').create(tcData);
           console.log(`[Integration Procedure IPCreateTelecomCustomer] Live record provisioned in Salesforce Org: ${created.id}`);
           tcContext.createdRecordId = created.id;
+          tcContext.lastId = created.id;
+          tcContext.telecomCustomerId = created.id;
         } catch (ipErr) {
           console.warn(`[Integration Procedure IPCreateTelecomCustomer] Live provisioning note: ${ipErr.message}`);
         }
@@ -2561,19 +2574,21 @@ async function executeOmniStep(page, rawStep, sfSkills = null, tcContext = {}, s
       if (sfSkills && sfSkills.conn && sfSkills.conn.accessToken) {
         try {
           console.log('[Post-Submission Provisioning] Provisioning Telecom_Customer__c record into connected Salesforce Org...');
+          const genFirst = faker.person.firstName();
+          const genLast = faker.person.lastName();
           const tcData = {
-            First_Name__c: tcContext.FirstName || tcContext.firstName || 'Goransh',
-            Last_Name__c: tcContext.LastName || tcContext.lastName || 'Raghav',
-            Email_Address__c: tcContext.EmailAddress || tcContext.email || 'goransh.raghav@keonos.com',
-            Mobile_Number__c: String(tcContext.MobileNumber || tcContext.mobile || '9876543210'),
-            Customer_Type__c: tcContext.CustomerType || tcContext.customerType || 'Enterprise',
-            Service_Type__c: tcContext.ServiceType || tcContext.serviceType || 'Broadband',
+            First_Name__c: tcContext.FirstName || tcContext.firstName || genFirst,
+            Last_Name__c: tcContext.LastName || tcContext.lastName || genLast,
+            Email_Address__c: tcContext.EmailAddress || tcContext.email || faker.internet.email({ firstName: genFirst, lastName: genLast }).toLowerCase(),
+            Mobile_Number__c: String(tcContext.MobileNumber || tcContext.mobile || faker.string.numeric(10)),
+            Customer_Type__c: tcContext.CustomerType || tcContext.customerType || 'Buisness',
+            Service_Type__c: tcContext.ServiceType || tcContext.serviceType || 'BroadBand',
             Telecom_Plan__c: tcContext.TelecomPlan || tcContext.telecomPlan || 'Premium 5G',
             Connection_Type__c: tcContext.ConnectionType || tcContext.connectionType || 'Postpaid',
             Number_of_Connections__c: parseInt(tcContext.NumberOfConnections || tcContext.numberOfConnections || 10, 10),
-            Billing_Address__c: tcContext.BillingAddress || tcContext.billingAddress || '500 Howard Street',
-            Billing_City__c: tcContext.BillingCity || tcContext.billingCity || 'San Francisco',
-            Billing_Postal_Code__c: tcContext.BillingPostalCode || tcContext.billingPostal || '94105',
+            Billing_Address__c: tcContext.BillingAddress || tcContext.billingAddress || faker.location.streetAddress(),
+            Billing_City__c: tcContext.BillingCity || tcContext.billingCity || faker.location.city(),
+            Billing_Postal_Code__c: tcContext.BillingPostalCode || tcContext.billingPostal || faker.location.zipCode('#####'),
             Payment_Method__c: tcContext.PaymentMethod || tcContext.paymentMethod || 'Invoice',
             Billing_Cycle__c: tcContext.BillingCycle || tcContext.billingCycle || 'Monthly',
             Terms_Accepted__c: true,
