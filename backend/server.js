@@ -1168,13 +1168,34 @@ app.post('/api/auth/manual', async (req, res) => {
     const cleanLoginUrl = resolveAdaptiveLoginUrl(req.body);
 
     console.log(`[Manual Credentials Auth] Authenticating directly via jsforce conn.login to ${cleanLoginUrl} for ${username.trim()}...`);
-    const conn = new jsforce.Connection({
+    let conn = new jsforce.Connection({
       loginUrl: cleanLoginUrl,
       version: '60.0',
     });
 
     const fullPassword = password.trim() + (securityToken ? securityToken.trim() : '');
-    const userInfo = await conn.login(username.trim(), fullPassword);
+    let userInfo;
+    try {
+      userInfo = await conn.login(username.trim(), fullPassword);
+    } catch (primaryLoginErr) {
+      if (cleanLoginUrl !== 'https://login.salesforce.com' && primaryLoginErr.name === 'INVALID_LOGIN') {
+        console.warn(`[Manual Credentials Auth] Custom domain login to ${cleanLoginUrl} failed with INVALID_LOGIN. Retrying via standard https://login.salesforce.com...`);
+        try {
+          const fallbackConn = new jsforce.Connection({
+            loginUrl: 'https://login.salesforce.com',
+            version: '60.0',
+          });
+          userInfo = await fallbackConn.login(username.trim(), fullPassword);
+          conn = fallbackConn;
+          console.log(`[Manual Credentials Auth] Fallback login to login.salesforce.com succeeded!`);
+        } catch (fallbackErr) {
+          console.error(`[Manual Credentials Auth] Both custom domain and login.salesforce.com failed:`, fallbackErr.message);
+          throw primaryLoginErr;
+        }
+      } else {
+        throw primaryLoginErr;
+      }
+    }
     console.log(`[Manual Credentials Auth] Login successful! User: ${userInfo.id}, Org: ${userInfo.organizationId}, Instance: ${conn.instanceUrl}`);
 
     const cleanInstance = conn.instanceUrl;
@@ -2407,28 +2428,32 @@ async function executeOmniStep(page, rawStep, sfSkills = null, tcContext = {}, s
 
   switch (command) {
     // ── Resilient OmniScript Specific Commands ───────────────────
-    case 'FILL_OMNI': {
+    case 'FILL_OMNI':
+    case 'FILL_OMNI_FIELD': {
       const [elementName, ...valueParts] = args;
       const cleanVal = valueParts.join(' ').replace(/^["']|["']$/g, '').trim();
       await fillOmniField(page, elementName, cleanVal);
       break;
     }
 
-    case 'SELECT_OMNI': {
+    case 'SELECT_OMNI':
+    case 'SELECT_OMNI_DROPDOWN': {
       const [elementName, ...optionParts] = args;
       const cleanOpt = optionParts.join(' ').replace(/^["']|["']$/g, '').trim();
       await selectOmniOption(page, elementName, cleanOpt);
       break;
     }
 
-    case 'CHECK_OMNI': {
+    case 'CHECK_OMNI':
+    case 'CHECK_OMNI_BOX': {
       const [elementName, checkedStr] = args;
       const cleanChecked = (checkedStr || '').replace(/^["']|["']$/g, '').toLowerCase() === 'true';
       await setOmniCheckbox(page, elementName, cleanChecked);
       break;
     }
 
-    case 'CLICK_NEXT': {
+    case 'CLICK_NEXT':
+    case 'CLICK_OMNI_NEXT': {
       await clickOmniNext(page);
       break;
     }

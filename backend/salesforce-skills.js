@@ -2325,7 +2325,7 @@ class SalesforceSkills {
       return { skill: 'createRecordViaUI', result: res };
     }
 
-    if (norm.includes('telecomomniscript') || norm.includes('executelivetelecomomniscript') || norm === 'liveomniscript') {
+    if (norm.includes('telecomomniscript') || norm.includes('executelivetelecomomniscript') || norm === 'liveomniscript' || norm.includes('omniscript') || norm.includes('vlocity') || norm.includes('wizard')) {
       const target = args.targetUrl || args.url || (page ? page.url() : null) || this.salesforceUrl;
       const res = await this.executeLiveTelecomOmniScript(page, target, { ...(context || {}), ...args }, runDir, runId);
       return { skill: 'executeLiveTelecomOmniScript', result: res };
@@ -2470,6 +2470,27 @@ function parseNlpGherkinContract(rawInput) {
 
   // Language-Agnostic Semantic Intent Classification across all formats (Gherkin, English, Hinglish)
   const fullText = text;
+
+  // 1. The Absolute OmniScript Layout Law: Mandatory override
+  const isOmniScript = /\b(telecomonboarding|telecom\s*onboarding|omniscript|vlocity|wizard|guided\s*wizard)\b/i.test(fullText);
+  if (isOmniScript) {
+    return {
+      isGherkin,
+      hasVisualWhenOrThen: true,
+      hasVisualIntent: true,
+      flowType: 'salesforce_omniscript',
+      executionMode: 'OMNISCRIPT_UI',
+      isOmniScript: true,
+      givenClauses,
+      whenClauses,
+      thenClauses,
+      givenEntities,
+      whenEntities,
+      thenEntities,
+      fullText,
+    };
+  }
+
   const visualSemanticRegex = /\b(ui|ui\s*se|via\s*ui|open\s*karke|karke|screen|screen\s*pe|browser|screenshot|screenshots|headed\s*browser|open\s*in\s*browser|test\s*on\s*screen|on\s*screen|visual|verify\s*layout|ui\s*layout|in\s*ui|ui\s*testing|ui\s*workflow|physical\s*browser|playwright|toast|button\s*daba|convert\s*kar)\b/i;
   const hasVisualIntent = isGherkin
     ? hasVisualWhenOrThen

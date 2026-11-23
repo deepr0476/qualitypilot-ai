@@ -130,6 +130,12 @@ function detectFlowType(text) {
   if (!text) return 'salesforce_omniscript';
   const str = typeof text === 'string' ? text : JSON.stringify(text);
 
+  // 1. The Absolute OmniScript Layout Law: Mandatory override
+  const hasOmniTerms = /\b(telecomonboarding|telecom\s*onboarding|omniscript|vlocity|wizard|guided\s*wizard|customerdetailsstep|planselectionstep|lwc\s*step)\b/i.test(str);
+  if (hasOmniTerms) {
+    return 'salesforce_omniscript';
+  }
+
   const hasHybridTerms = /\b(hybrid|lead-to-cash|lead\s+to\s+cash|cpq|quote\s*line\s*editor|edit\s*lines|add\s*products)\b/i.test(str);
   if (hasHybridTerms) {
     return 'salesforce_hybrid_flow';
@@ -146,7 +152,6 @@ function detectFlowType(text) {
 
   const hasStandardCrmTerms = /\b(sales\s*cloud|service\s*cloud|lightning\s*flow|standard\s*flow|crm\s*lifecycle|related\s*list|account\s*(?:->|→)\s*contact)\b/i.test(str);
   const mentionsStandardObjects = (str.match(/\b(Account|Contact|Opportunity|Lead|Case|Quote|Order|Contract)\b/gi) || []).length >= 2;
-  const hasOmniTerms = /\b(omniscript|vlocity|customerdetailsstep|planselectionstep|telecomonboarding|guided\s*wizard|lwc\s*step)\b/i.test(str);
 
   if (hasStandardCrmTerms || (mentionsStandardObjects && !hasOmniTerms)) {
     return 'salesforce_lightning_flow';
@@ -622,9 +627,14 @@ function deduceSemanticExecutionPlan(inputContext, appName, testDataInput = null
   }
 
   // Condition B (B2B Custom App Canvas): Multi-layered custom iframe / shadow-DOM component canvases
-  // Strictly locked to: CPQ Quote Line Editor (QLE) iframe canvas AND multi-page OmniStudio/Vlocity forms
+  // Absolute OmniScript Layout Law: TelecomOnboarding, OmniScript, Vlocity, or Wizard MUST force UI canvas
   const isCpqCanvas = /\b(cpq|sbqq|quote\s*line\s*editor|edit\s*lines)\b/i.test(normalizedText) || /\blead\s*to\s*cash\b/i.test(normalizedText);
-  const isOmniScriptCanvas = /\b(omniscript|vlocity|telecom\s*onboarding|guided\s*wizard)\b/i.test(normalizedText) && !/\b(account|contact|opportunity|lead|case|contract|order)\b/i.test(normalizedText);
+  const isOmniScriptCanvas = /\b(omniscript|vlocity|telecom\s*onboarding|telecomonboarding|guided\s*wizard|wizard)\b/i.test(normalizedText) ||
+    /\b(omniscript|vlocity|telecom\s*onboarding|telecomonboarding|guided\s*wizard|wizard)\b/i.test(rawText) ||
+    /\b(omniscript|vlocity|telecom\s*onboarding|telecomonboarding|guided\s*wizard|wizard)\b/i.test(appName || '');
+  if (isOmniScriptCanvas) {
+    hasExplicitUiMandate = true;
+  }
   const isComplexCanvas = isCpqCanvas || isOmniScriptCanvas;
   const allowUiRunner = hasExplicitUiMandate || isComplexCanvas;
 
@@ -953,6 +963,7 @@ function generateDynamicTestCases(requirements, appName, testDataInput = null) {
 
   // ── 🧠 PATHWAY 1: Condition B (OmniStudio / Vlocity Multi-Page Form Canvas) ──
   if (isOmniScriptCanvas) {
+    const omniWrapperUrl = '/lightning/cmp/vlocity_cmt__OmniScriptUniversalWrapper?c__layout=lightning&c__target=c:telecomOnboardingEnglish';
     return [
       {
         id: 'TC-001',
@@ -962,26 +973,27 @@ function generateDynamicTestCases(requirements, appName, testDataInput = null) {
         executionMode: 'OMNISCRIPT_UI',
         description: `Complete valid end-to-end user journey across all OmniScript steps of ${resolvedName} with customer details, plan selection, and payment confirmation.`,
         steps: [
-          'FILL_OMNI FirstName {{$randomFirstName}}',
-          'FILL_OMNI LastName {{$randomLastName}}',
-          'FILL_OMNI EmailAddress {{$randomEmail}}',
-          'FILL_OMNI MobileNumber {{$randomPhone}}',
-          `SELECT_OMNI CustomerType ${testDataObj.CustomerType || 'New'}`,
-          'CLICK_NEXT',
-          `SELECT_OMNI ServiceType ${testDataObj.ServiceType || 'Mobile'}`,
-          `SELECT_OMNI TelecomPlan ${testDataObj.TelecomPlan || 'Premium 5G'}`,
-          `SELECT_OMNI ConnectionType ${testDataObj.ConnectionType || 'Postpaid'}`,
-          `FILL_OMNI NumberOfConnections ${testDataObj.NumberOfConnections || '5'}`,
-          'CLICK_NEXT',
-          'FILL_OMNI BillingAddress 500 Howard Street',
-          'FILL_OMNI BillingCity San Francisco',
-          'FILL_OMNI BillingPostalCode 94105',
-          `SELECT_OMNI PaymentMethod ${testDataObj.PaymentMethod || 'Credit Card'}`,
-          `SELECT_OMNI BillingCycle ${testDataObj.BillingCycle || 'Monthly'}`,
-          'CHECK_OMNI TermsAccepted true',
-          'CLICK_NEXT',
-          'CHECK_OMNI ConfirmDetails true',
-          'CLICK_NEXT',
+          `NAVIGATE ${omniWrapperUrl}`,
+          'FILL_OMNI_FIELD FirstName {{$randomFirstName}}',
+          'FILL_OMNI_FIELD LastName {{$randomLastName}}',
+          'FILL_OMNI_FIELD EmailAddress {{$randomEmail}}',
+          'FILL_OMNI_FIELD MobileNumber {{$randomPhone}}',
+          `SELECT_OMNI_DROPDOWN CustomerType ${testDataObj.CustomerType || 'New'}`,
+          'CLICK_OMNI_NEXT',
+          `SELECT_OMNI_DROPDOWN ServiceType ${testDataObj.ServiceType || 'Mobile'}`,
+          `SELECT_OMNI_DROPDOWN TelecomPlan ${testDataObj.TelecomPlan || 'Premium 5G'}`,
+          `SELECT_OMNI_DROPDOWN ConnectionType ${testDataObj.ConnectionType || 'Postpaid'}`,
+          `FILL_OMNI_FIELD NumberOfConnections ${testDataObj.NumberOfConnections || '5'}`,
+          'CLICK_OMNI_NEXT',
+          'FILL_OMNI_FIELD BillingAddress 500 Howard Street',
+          'FILL_OMNI_FIELD BillingCity San Francisco',
+          'FILL_OMNI_FIELD BillingPostalCode 94105',
+          `SELECT_OMNI_DROPDOWN PaymentMethod ${testDataObj.PaymentMethod || 'Credit Card'}`,
+          `SELECT_OMNI_DROPDOWN BillingCycle ${testDataObj.BillingCycle || 'Monthly'}`,
+          'CHECK_OMNI_BOX TermsAccepted true',
+          'CLICK_OMNI_NEXT',
+          'CHECK_OMNI_BOX ConfirmDetails true',
+          'CLICK_OMNI_NEXT',
           'ASSERT_CONFIRMATION',
         ],
       },
@@ -993,9 +1005,10 @@ function generateDynamicTestCases(requirements, appName, testDataInput = null) {
         executionMode: 'OMNISCRIPT_UI',
         description: 'Verify step progression is blocked when mandatory First Name is omitted.',
         steps: [
-          'FILL_OMNI LastName {{$randomLastName}}',
-          'FILL_OMNI EmailAddress {{$randomEmail}}',
-          'CLICK_NEXT',
+          `NAVIGATE ${omniWrapperUrl}`,
+          'FILL_OMNI_FIELD LastName {{$randomLastName}}',
+          'FILL_OMNI_FIELD EmailAddress {{$randomEmail}}',
+          'CLICK_OMNI_NEXT',
           'ASSERT_OMNI_ERROR FirstName',
         ],
       },
@@ -1007,8 +1020,9 @@ function generateDynamicTestCases(requirements, appName, testDataInput = null) {
         executionMode: 'OMNISCRIPT_UI',
         description: 'Verify invalid email string triggers inline RFC 5322 validation failure.',
         steps: [
-          'FILL_OMNI EmailAddress invalid-user-email',
-          'CLICK_NEXT',
+          `NAVIGATE ${omniWrapperUrl}`,
+          'FILL_OMNI_FIELD EmailAddress invalid-user-email',
+          'CLICK_OMNI_NEXT',
           'ASSERT_OMNI_ERROR EmailAddress',
         ],
       },
@@ -1020,8 +1034,14 @@ function generateDynamicTestCases(requirements, appName, testDataInput = null) {
         executionMode: 'OMNISCRIPT_UI',
         description: 'Verify that unchecking Terms and Conditions prevents wizard completion.',
         steps: [
-          'CHECK_OMNI TermsAccepted false',
-          'CLICK_NEXT',
+          `NAVIGATE ${omniWrapperUrl}`,
+          'FILL_OMNI_FIELD FirstName {{$randomFirstName}}',
+          'FILL_OMNI_FIELD LastName {{$randomLastName}}',
+          'FILL_OMNI_FIELD EmailAddress {{$randomEmail}}',
+          'CLICK_OMNI_NEXT',
+          'CLICK_OMNI_NEXT',
+          'CHECK_OMNI_BOX TermsAccepted false',
+          'CLICK_OMNI_NEXT',
           'ASSERT_OMNI_ERROR TermsAccepted',
         ],
       },
@@ -1971,7 +1991,21 @@ function normalizeStepToString(step) {
 async function designTests(requirements, omniScriptName = null, testDataInput = null) {
   const appName = omniScriptName || requirements?.omniScriptName || deriveApplicationName(requirements, null);
   const plan = deduceSemanticExecutionPlan(requirements, appName, testDataInput);
-  const flowType = requirements?.flowType || plan.flowType;
+  let flowType = requirements?.flowType || plan.flowType;
+
+  // 1. The Absolute OmniScript Layout Law: Mandatory override
+  const isOmniExplicit = plan.isOmniScriptCanvas ||
+    /\b(telecomonboarding|telecom\s*onboarding|omniscript|vlocity|wizard|guided\s*wizard)\b/i.test(appName) ||
+    /\b(telecomonboarding|telecom\s*onboarding|omniscript|vlocity|wizard|guided\s*wizard)\b/i.test(requirements?.omniScriptName || '') ||
+    /\b(telecomonboarding|telecom\s*onboarding|omniscript|vlocity|wizard|guided\s*wizard)\b/i.test(JSON.stringify(requirements || {}));
+
+  if (isOmniExplicit) {
+    flowType = 'salesforce_omniscript';
+    plan.isOmniScriptCanvas = true;
+    plan.allowUiRunner = true;
+    plan.hasExplicitUiMandate = true;
+  }
+
   const testDataRaw = testDataInput || requirements?.testData || '';
   const testDataObj = { ...plan.testDataObj, ...parseTestData(testDataRaw) };
   const productOverride = testDataObj.Product || testDataObj.product || testDataObj.ProductName || null;
@@ -2072,9 +2106,16 @@ CRITICAL RULES:
      STRICT SEPARATION RULE: For all prerequisite headers (Account, Contact, Opportunity, Quote, Case, Lead), NEVER output UI actions like NAVIGATE_OBJECT or CLICK_NEW.
      Seed all headers via clean REST API: 'API_REQUEST POST /services/data/v60.0/sobjects/<Object> {...} 201'.
      Playwright UI steps (NAVIGATE, CLICK_BUTTON, etc.) must ONLY appear starting exactly from the Quote Line Editor ('Edit Lines' / 'Add Products'), Lead Convert modal ('Convert'), or OmniScript wizard actions.
-   - If flowType is 'salesforce_omniscript':
-     TC-001 (OMNISCRIPT_UI):
-     Use 'FILL_OMNI <elem> <val>', 'SELECT_OMNI <elem> <opt>', 'CHECK_OMNI <elem> true', 'CLICK_NEXT', 'ASSERT_CONFIRMATION'.
+   - If flowType is 'salesforce_omniscript' or mentions TelecomOnboarding, OmniScript, Vlocity, or Wizard:
+     TC-001 through TC-004 MUST use 'executionMode': 'OMNISCRIPT_UI'.
+     STRICTLY FORBIDDEN: Do NOT output 'API_TEST' or 'API_REQUEST' badges for form steps.
+     Steps MUST output crisp Playwright action blocks:
+     'NAVIGATE /lightning/cmp/vlocity_cmt__OmniScriptUniversalWrapper?c__layout=lightning&c__target=c:telecomOnboardingEnglish'
+     'FILL_OMNI_FIELD <FieldName> <Value>'
+     'SELECT_OMNI_DROPDOWN <FieldName> <Value>'
+     'CHECK_OMNI_BOX <FieldName> <Value>'
+     'CLICK_OMNI_NEXT'
+     'ASSERT_CONFIRMATION'
 
 4. TEST CASE COMPOSITION & TC-005 SPECIFICATION (ZERO DUPLICATION!):
    - TC-001 (Positive E2E Happy Path): Complete end-to-end execution combining API seeding + UI critical path + downstream provisioning (or full UI if pure form).
@@ -2243,7 +2284,24 @@ Return strictly valid JSON:
           }
         }
 
-        if (!plan.allowUiRunner) {
+        // 1. The Absolute OmniScript Layout Law: Mandatory override
+        if (isOmniExplicit) {
+          if (tc.id !== 'TC-005') {
+            tc.executionMode = 'OMNISCRIPT_UI';
+            // Strictly forbid plain gray API steps for form steps
+            if (tc.steps.some((s) => s.startsWith('API_REQUEST')) || !tc.steps.some((s) => s.startsWith('FILL_OMNI') || s.startsWith('SELECT_OMNI') || s.startsWith('NAVIGATE'))) {
+              const dynTcs = generateDynamicTestCases(requirements, appName, testDataObj);
+              const matchingDyn = dynTcs.find((d) => d.id === tc.id);
+              if (matchingDyn) {
+                tc.steps = matchingDyn.steps;
+                tc.name = matchingDyn.name;
+                tc.description = matchingDyn.description;
+              }
+            }
+          } else {
+            tc.executionMode = 'API_TEST';
+          }
+        } else if (!plan.allowUiRunner) {
           tc.executionMode = 'API_TEST';
         } else if (!tc.executionMode) {
           const hasApi = tc.steps.some((s) => s.startsWith('API_REQUEST'));
@@ -2256,7 +2314,7 @@ Return strictly valid JSON:
       });
 
       // Strict enforcement of API-First Law: If not allowed to run UI, verify zero visual steps leaked from LLM
-      if (!plan.allowUiRunner && testCases.some((tc) => tc.steps.some((s) => !s.startsWith('API_REQUEST')))) {
+      if (!isOmniExplicit && !plan.allowUiRunner && testCases.some((tc) => tc.steps.some((s) => !s.startsWith('API_REQUEST')))) {
         console.warn(`[Agent 02 - Cognitive Decision Tree] LLM generated visual steps for non-visual flow. Strictly overriding with deterministic API-First execution.`);
         return generateDynamicTestCases(requirements, appName, testDataObj);
       }

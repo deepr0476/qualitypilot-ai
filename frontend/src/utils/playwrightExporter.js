@@ -78,7 +78,7 @@ export function generatePlaywrightSpec({ testCases = [], suiteName = 'Salesforce
       }
 
       // Next / Submit Button
-      if (trimmed === 'CLICK_NEXT' || trimmed === 'CLICK_SUBMIT') {
+      if (trimmed === 'CLICK_NEXT' || trimmed === 'CLICK_SUBMIT' || trimmed === 'CLICK_OMNI_NEXT') {
         return `    // Click Next / Submit
     await page.locator('button:has-text("Next"), button.slds-button_brand:has-text("Next")').first().click();
     await page.waitForTimeout(1500);`;
