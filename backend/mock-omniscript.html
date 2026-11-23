@@ -1,0 +1,1190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>QualityX_TelecomOnboarding | Salesforce OmniScript</title>
+  <style>
+    /* ── Salesforce Lightning Design System (SLDS) Mimic ── */
+    :root {
+      --slds-brand: #0176d3;
+      --slds-brand-hover: #014486;
+      --slds-brand-text: #ffffff;
+      --slds-bg: #f3f3f3;
+      --slds-card-bg: #ffffff;
+      --slds-border: #c9c9c9;
+      --slds-border-radius: 0.25rem;
+      --slds-text: #181818;
+      --slds-text-weak: #444444;
+      --slds-error: #ea001e;
+      --slds-success: #2e844a;
+      --slds-header-bg: #ffffff;
+      --slds-navy: #001639;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--slds-bg);
+      color: var(--slds-text);
+      line-height: 1.5;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── Salesforce Global Navigation Bar ── */
+    .slds-global-header {
+      background: var(--slds-navy);
+      color: #fff;
+      height: 50px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    .slds-global-header__logo {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 700;
+      font-size: 1rem;
+      letter-spacing: -0.02em;
+    }
+    .sf-cloud-icon {
+      width: 28px;
+      height: 28px;
+      fill: #0176d3;
+    }
+    .slds-global-header__org-badge {
+      background: rgba(255, 255, 255, 0.15);
+      font-size: 0.75rem;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      color: #e0e5ea;
+    }
+    .slds-global-header__user {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.85rem;
+    }
+    .user-avatar {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #65cae4;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      color: #001639;
+      font-size: 0.8rem;
+    }
+
+    /* ── App Sub-Header / Breadcrumb ── */
+    .slds-app-launcher-bar {
+      background: #fff;
+      border-bottom: 1px solid #ddd;
+      padding: 0.75rem 2rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .app-title {
+      font-size: 1.15rem;
+      font-weight: 700;
+      color: #080707;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .vlocity-pill {
+      background: #eef4ff;
+      border: 1px solid #b0c4de;
+      color: #0176d3;
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 0.15rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    /* ── Main Canvas ── */
+    .omni-container {
+      max-width: 960px;
+      margin: 1.75rem auto 3rem;
+      background: #fff;
+      border: 1px solid var(--slds-border);
+      border-radius: var(--slds-border-radius);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ── OmniScript Stepper ── */
+    .omni-stepper-header {
+      background: #fafaf9;
+      border-bottom: 1px solid var(--slds-border);
+      padding: 1.25rem 2rem;
+    }
+    .omni-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #080707;
+      margin-bottom: 0.75rem;
+    }
+    .slds-progress {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: relative;
+    }
+    .slds-progress-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      flex: 1;
+      text-align: center;
+    }
+    .slds-progress-marker {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: #fff;
+      border: 2px solid #b0adab;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #706e6b;
+      z-index: 2;
+      transition: all 0.3s;
+    }
+    .slds-progress-label {
+      font-size: 0.75rem;
+      color: #706e6b;
+      margin-top: 0.4rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .slds-progress-step.active .slds-progress-marker {
+      border-color: var(--slds-brand);
+      background: var(--slds-brand);
+      color: #fff;
+      box-shadow: 0 0 0 3px rgba(1, 118, 211, 0.2);
+    }
+    .slds-progress-step.active .slds-progress-label {
+      color: var(--slds-brand);
+      font-weight: 700;
+    }
+    .slds-progress-step.completed .slds-progress-marker {
+      border-color: var(--slds-success);
+      background: var(--slds-success);
+      color: #fff;
+    }
+    .slds-progress-step.completed .slds-progress-label {
+      color: var(--slds-success);
+    }
+    .slds-progress-line {
+      position: absolute;
+      top: 14px;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: #e5e5e5;
+      z-index: 1;
+    }
+
+    /* ── Step Content ── */
+    .omni-step-body {
+      padding: 2rem;
+      min-height: 380px;
+    }
+    .step-section-heading {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: #080707;
+      margin-bottom: 0.4rem;
+    }
+    .step-section-desc {
+      color: var(--slds-text-weak);
+      font-size: 0.85rem;
+      margin-bottom: 1.75rem;
+    }
+
+    /* ── SLDS Forms ── */
+    .slds-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+    }
+    .slds-form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+    }
+    @media (max-width: 640px) {
+      .slds-form-row { grid-template-columns: 1fr; }
+    }
+    .slds-form-element {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+      position: relative;
+    }
+    .slds-form-element__label {
+      font-size: 0.82rem;
+      font-weight: 600;
+      color: #3e3e3c;
+    }
+    .slds-required {
+      color: var(--slds-error);
+      font-weight: bold;
+      margin-left: 0.2rem;
+    }
+    .slds-input,
+    .slds-select,
+    .slds-textarea {
+      background: #fff;
+      border: 1px solid var(--slds-border);
+      border-radius: var(--slds-border-radius);
+      padding: 0.55rem 0.75rem;
+      font-size: 0.9rem;
+      color: var(--slds-text);
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+      width: 100%;
+    }
+    .slds-input:focus,
+    .slds-select:focus,
+    .slds-textarea:focus {
+      border-color: var(--slds-brand);
+      box-shadow: 0 0 3px #0176d3;
+    }
+    .slds-textarea {
+      min-height: 80px;
+      resize: vertical;
+    }
+
+    /* Checkbox */
+    .slds-checkbox-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.65rem;
+      cursor: pointer;
+      user-select: none;
+      margin-top: 0.4rem;
+    }
+    .slds-checkbox-container input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      margin-top: 2px;
+      accent-color: var(--slds-brand);
+      cursor: pointer;
+    }
+    .slds-checkbox-label {
+      font-size: 0.88rem;
+      color: #181818;
+      line-height: 1.4;
+    }
+
+    /* Errors */
+    .slds-has-error .slds-input,
+    .slds-has-error .slds-select,
+    .slds-has-error .slds-textarea {
+      border-color: var(--slds-error) !important;
+      box-shadow: 0 0 3px rgba(234, 0, 30, 0.4);
+    }
+    .slds-form-element__help {
+      font-size: 0.78rem;
+      color: var(--slds-error);
+      margin-top: 0.25rem;
+      font-weight: 500;
+      display: none;
+    }
+    .slds-has-error .slds-form-element__help {
+      display: block;
+    }
+
+    /* ── Action Footer ── */
+    .omni-footer {
+      background: #fafaf9;
+      border-top: 1px solid var(--slds-border);
+      padding: 1.25rem 2rem;
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.75rem;
+    }
+    .slds-button {
+      padding: 0.6rem 1.4rem;
+      font-size: 0.88rem;
+      font-weight: 600;
+      border-radius: var(--slds-border-radius);
+      border: 1px solid transparent;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .slds-button_neutral {
+      background: #fff;
+      border-color: var(--slds-border);
+      color: #0176d3;
+    }
+    .slds-button_neutral:hover {
+      background: #f4f6f9;
+      border-color: #0176d3;
+    }
+    .slds-button_brand {
+      background: var(--slds-brand);
+      color: var(--slds-brand-text);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+    .slds-button_brand:hover {
+      background: var(--slds-brand-hover);
+    }
+    .slds-button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    /* ── Step 4 Summary Table ── */
+    .review-summary-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 1.5rem;
+    }
+    .review-summary-table th,
+    .review-summary-table td {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #e5e5e5;
+      text-align: left;
+    }
+    .review-summary-table th {
+      background: #f8f9fa;
+      width: 35%;
+      color: #555;
+      font-weight: 600;
+    }
+    .review-summary-table td {
+      color: #111;
+      font-weight: 500;
+    }
+
+    /* ── Step 5 Confirmation Box ── */
+    .confirmation-banner {
+      text-align: center;
+      padding: 2.5rem 1rem;
+    }
+    .confirmation-icon {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: #eaf5ea;
+      color: var(--slds-success);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2.2rem;
+      margin-bottom: 1rem;
+    }
+    .confirmation-heading {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #080707;
+      margin-bottom: 0.5rem;
+    }
+    .confirmation-message {
+      color: var(--slds-text-weak);
+      font-size: 1rem;
+      max-width: 540px;
+      margin: 0 auto 1.75rem;
+    }
+    .reference-pill {
+      display: inline-block;
+      background: #eef4ff;
+      border: 2px dashed #0176d3;
+      padding: 0.75rem 1.75rem;
+      border-radius: 8px;
+    }
+    .reference-label {
+      font-size: 0.75rem;
+      color: #555;
+      text-transform: uppercase;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+    }
+    .reference-number {
+      font-size: 1.5rem;
+      font-weight: 900;
+      color: #0176d3;
+      font-family: monospace;
+      margin-top: 0.2rem;
+    }
+
+    /* ── SLDS Spinner Overlay ── */
+    .slds-spinner_container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(2px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      z-index: 1000;
+      gap: 1rem;
+    }
+    .slds-spinner {
+      width: 48px;
+      height: 48px;
+      border: 4px solid #dddbda;
+      border-top-color: var(--slds-brand);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .spinner-text {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #0176d3;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Hide inactive steps */
+    .step-page { display: none; }
+    .step-page.active { display: block; }
+
+    /* ── Simulation Banners ── */
+    .simulation-banner {
+      padding: 0.75rem 1.75rem;
+      font-size: 0.85rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      border-bottom: 2px solid transparent;
+    }
+    .simulation-banner.ui-change {
+      background: #fff8e1;
+      color: #8c5200;
+      border-color: #ffb74d;
+    }
+    .simulation-banner.defect {
+      background: #fee2e2;
+      color: #991b1b;
+      border-color: #f87171;
+    }
+    .sim-tag {
+      display: inline-block;
+      padding: 0.2rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.72rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-right: 0.5rem;
+    }
+    .simulation-banner.ui-change .sim-tag {
+      background: #ffe082;
+      color: #6d3a00;
+    }
+    .simulation-banner.defect .sim-tag {
+      background: #fca5a5;
+      color: #7f1d1d;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ── Global Header ── -->
+  <header class="slds-global-header">
+    <div class="slds-global-header__logo">
+      <svg class="sf-cloud-icon" viewBox="0 0 24 24">
+        <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z"/>
+      </svg>
+      <span>Salesforce Communications Cloud</span>
+      <span class="slds-global-header__org-badge">Sandbox · TrialOrg</span>
+    </div>
+    <div class="slds-global-header__user">
+      <span class="user-avatar">QA</span>
+      <span>Admin User (Quality X Test)</span>
+    </div>
+  </header>
+
+  <!-- ── App Launcher Sub-Bar ── -->
+  <div class="slds-app-launcher-bar">
+    <div class="app-title">
+      <span>OmniScript Runtime: <strong>QualityX_TelecomOnboarding</strong></span>
+      <span class="vlocity-pill">Vlocity LWC Wrapper</span>
+    </div>
+  </div>
+
+  <!-- ── Simulation Banner ── -->
+  <div id="simulationBanner" style="display: none;"></div>
+
+  <!-- ── OmniScript Container ── -->
+  <main class="omni-container" id="omniScriptContainer">
+
+    <!-- ── SLDS Spinner ── -->
+    <div class="slds-spinner_container" id="omniSpinner">
+      <div class="slds-spinner"></div>
+      <div class="spinner-text" id="spinnerText">Loading OmniScript Step...</div>
+    </div>
+
+    <!-- ── Stepper ── -->
+    <div class="omni-stepper-header">
+      <h1 class="omni-title">Customer Onboarding Journey</h1>
+      <div class="slds-progress">
+        <div class="slds-progress-line"></div>
+        <div class="slds-progress-step active" id="progStep1">
+          <div class="slds-progress-marker">1</div>
+          <div class="slds-progress-label">Customer Details</div>
+        </div>
+        <div class="slds-progress-step" id="progStep2">
+          <div class="slds-progress-marker">2</div>
+          <div class="slds-progress-label">Plan Selection</div>
+        </div>
+        <div class="slds-progress-step" id="progStep3">
+          <div class="slds-progress-marker">3</div>
+          <div class="slds-progress-label">Payment Details</div>
+        </div>
+        <div class="slds-progress-step" id="progStep4">
+          <div class="slds-progress-marker">4</div>
+          <div class="slds-progress-label">Review &amp; Submit</div>
+        </div>
+        <div class="slds-progress-step" id="progStep5">
+          <div class="slds-progress-marker">5</div>
+          <div class="slds-progress-label">Confirmation</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════════════════
+         STEP 1: CustomerDetailsStep
+         ══════════════════════════════════════════════════════════ -->
+    <section class="omni-step-body step-page active" id="step1">
+      <h2 class="step-section-heading">Step 1: Customer Details</h2>
+      <p class="step-section-desc">Provide primary subscriber identity and contact information.</p>
+
+      <div class="slds-form">
+        <div class="slds-form-row">
+          <div class="slds-form-element" data-omni-key="FirstName">
+            <label class="slds-form-element__label" for="FirstName">
+              First Name <span class="slds-required">*</span>
+            </label>
+            <div class="slds-form-element__control">
+              <input type="text" id="FirstName" name="FirstName" class="slds-input" placeholder="e.g. Rahul" />
+            </div>
+            <div class="slds-form-element__help" id="err-FirstName">First Name is required.</div>
+          </div>
+
+          <div class="slds-form-element" data-omni-key="LastName">
+            <label class="slds-form-element__label" for="LastName">
+              Last Name <span class="slds-required">*</span>
+            </label>
+            <div class="slds-form-element__control">
+              <input type="text" id="LastName" name="LastName" class="slds-input" placeholder="e.g. Sharma" />
+            </div>
+            <div class="slds-form-element__help" id="err-LastName">Last Name is required.</div>
+          </div>
+        </div>
+
+        <div class="slds-form-row">
+          <div class="slds-form-element" data-omni-key="Email" data-omni-alias="EmailAddress" id="emailFormElement">
+            <label class="slds-form-element__label" for="Email">
+              Email <span class="slds-required">*</span>
+            </label>
+            <div class="slds-form-element__control">
+              <input type="email" id="Email" name="Email" class="slds-input" placeholder="name@example.com" />
+            </div>
+            <div class="slds-form-element__help" id="err-Email">Please enter a valid email address with '@' and domain.</div>
+            <div class="slds-form-element__help" id="err-EmailAddress" style="display:none;">Please enter a valid email address with '@' and domain.</div>
+          </div>
+
+          <div class="slds-form-element" data-omni-key="MobileNumber">
+            <label class="slds-form-element__label" for="MobileNumber">
+              Mobile Number (10 digits) <span class="slds-required">*</span>
+            </label>
+            <div class="slds-form-element__control">
+              <input type="tel" id="MobileNumber" name="MobileNumber" class="slds-input" placeholder="e.g. 9876543210" maxlength="10" />
+            </div>
+            <div class="slds-form-element__help" id="err-MobileNumber">Mobile Number must contain exactly 10 numeric digits.</div>
+          </div>
+        </div>
+
+        <div class="slds-form-element" data-omni-key="CustomerType">
+          <label class="slds-form-element__label" for="CustomerType">
+            Customer Type <span class="slds-required">*</span>
+          </label>
+          <div class="slds-form-element__control">
+            <select id="CustomerType" name="CustomerType" class="slds-select">
+              <option value="">-- Select Customer Type --</option>
+              <option value="New">New</option>
+              <option value="Existing">Existing</option>
+              <option value="Individual">Individual</option>
+              <option value="Business">Business</option>
+              <option value="Buisness">Buisness</option>
+              <option value="Enterprise">Enterprise</option>
+            </select>
+          </div>
+          <div class="slds-form-element__help" id="err-CustomerType">Please select a customer type.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         STEP 2: PlanSelectionStep
+         ══════════════════════════════════════════════════════════ -->
+    <section class="omni-step-body step-page" id="step2">
+      <h2 class="step-section-heading">Step 2: Plan Selection</h2>
+      <p class="step-section-desc">Select desired telecom service, speed tier, and connection configuration.</p>
+
+      <div class="slds-form">
+        <div class="slds-form-row">
+          <div class="slds-form-element" data-omni-key="ServiceType">
+            <label class="slds-form-element__label" for="ServiceType">
+              Service Type <span class="slds-required">*</span>
+            </label>
+            <div class="slds-form-element__control">
+              <select id="ServiceType" name="ServiceType" class="slds-select">
+                <option value="">-- Select Service Type --</option>
+                <option value="Mobile">Mobile</option>
+                <option value="Broadband">Broadband</option>
+                <option value="BroadBand">BroadBand</option>
+                <option value="Enterprise">Enterprise</option>
+              </select>
+            </div>
+            <div class="slds-form-element__help" id="err-ServiceType">Please choose a service type.</div>
+          </div>
+
+          <div class="slds-form-element" data-omni-key="TelecomPlan">
+            <label class="slds-form-element__label" for="TelecomPlan">
+              Telecom Plan <span class="slds-required">*</span>
+            </label>
+            <div class="slds-form-element__control">
+              <select id="TelecomPlan" name="TelecomPlan" class="slds-select">
+                <option value="">-- Select Plan --</option>
+                <option value="Basic 4G">Basic 4G</option>
+                <option value="Premium 5G">Premium 5G</option>
+                <option value="Business Unlimited">Business Unlimited</option>
+                <option value="Buisness Unlimited">Buisness Unlimited</option>
+              </select>
+            </div>
+            <div class="slds-form-element__help" id="err-TelecomPlan">Please select a telecom plan tier.</div>
+          </div>
+        </div>
+
+        <div class="slds-form-row">
+          <div class="slds-form-element" data-omni-key="ConnectionType">
+            <label class="slds-form-element__label" for="ConnectionType">
+              Connection Type <span class="slds-required">*</span>
+            </label>
+            <div class="slds-form-element__control">
+              <select id="ConnectionType" name="ConnectionType" class="slds-select">
+                <option value="">-- Select Connection Type --</option>
+                <option value="Prepaid">Prepaid</option>
+                <option value="Postpaid">Postpaid</option>
+              </select>
+            </div>
+            <div class="slds-form-element__help" id="err-ConnectionType">Please select prepaid or postpaid.</div>
+          </div>
+
+          <div class="slds-form-element" data-omni-key="NumberOfConnections">
+            <label class="slds-form-element__label" for="NumberOfConnections">
+              Number of Connections <span class="slds-required">*</span>
+            </label>
+            <div class="slds-form-element__control">
+              <input type="number" id="NumberOfConnections" name="NumberOfConnections" class="slds-input" value="1" min="1" />
+            </div>
+            <div class="slds-form-element__help" id="err-NumberOfConnections">Minimum 1 connection required.</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         STEP 3: PaymentDetailsStep
+         ══════════════════════════════════════════════════════════ -->
+    <section class="omni-step-body step-page" id="step3">
+      <h2 class="step-section-heading">Step 3: Payment &amp; Billing Details</h2>
+      <p class="step-section-desc">Enter billing location and authorize monthly payment schedule.</p>
+
+      <div class="slds-form">
+        <div class="slds-form-element" data-omni-key="BillingAddress">
+          <label class="slds-form-element__label" for="BillingAddress">
+            Billing Address <span class="slds-required">*</span>
+          </label>
+          <div class="slds-form-element__control">
+            <textarea id="BillingAddress" name="BillingAddress" class="slds-textarea" placeholder="Street address, building, suite..."></textarea>
+          </div>
+          <div class="slds-form-element__help" id="err-BillingAddress">Billing Address is required.</div>
+        </div>
+
+        <div class="slds-form-row">
+          <div class="slds-form-element" data-omni-key="BillingCity">
+            <label class="slds-form-element__label" for="BillingCity">
+              Billing City <span class="slds-required">*</span>
+            </label>
+            <div class="slds-form-element__control">
+              <input type="text" id="BillingCity" name="BillingCity" class="slds-input" placeholder="e.g. San Francisco" />
+            </div>
+            <div class="slds-form-element__help" id="err-BillingCity">Billing City is required.</div>
+          </div>
+
+          <div class="slds-form-element" data-omni-key="BillingState">
+            <label class="slds-form-element__label" for="BillingState">
+              Billing State
+            </label>
+            <div class="slds-form-element__control">
+              <input type="text" id="BillingState" name="BillingState" class="slds-input" placeholder="e.g. CA" />
+            </div>
+          </div>
+        </div>
+
+        <div class="slds-form-row">
+          <div class="slds-form-element" data-omni-key="BillingCountry">
+            <label class="slds-form-element__label" for="BillingCountry">
+              Billing Country
+            </label>
+            <div class="slds-form-element__control">
+              <input type="text" id="BillingCountry" name="BillingCountry" class="slds-input" placeholder="e.g. USA" />
+            </div>
+          </div>
+
+          <div class="slds-form-element" data-omni-key="BillingPostalCode">
+            <label class="slds-form-element__label" for="BillingPostalCode">
+              Billing Postal Code <span class="slds-required">*</span>
+            </label>
+            <div class="slds-form-element__control">
+              <input type="text" id="BillingPostalCode" name="BillingPostalCode" class="slds-input" placeholder="e.g. 94105" />
+            </div>
+            <div class="slds-form-element__help" id="err-BillingPostalCode">Billing Postal Code is required.</div>
+          </div>
+        </div>
+
+        <div class="slds-form-row">
+          <div class="slds-form-element" data-omni-key="PaymentMethod">
+            <label class="slds-form-element__label" for="PaymentMethod">
+              Payment Method <span class="slds-required">*</span>
+            </label>
+            <div class="slds-form-element__control">
+              <select id="PaymentMethod" name="PaymentMethod" class="slds-select">
+                <option value="">-- Select Payment Method --</option>
+                <option value="UPI">UPI</option>
+                <option value="Credit Card">Credit Card</option>
+                <option value="Net Banking">Net Banking</option>
+                <option value="Invoice">Invoice</option>
+              </select>
+            </div>
+            <div class="slds-form-element__help" id="err-PaymentMethod">Please select a payment method.</div>
+          </div>
+
+          <div class="slds-form-element" data-omni-key="BillingCycle">
+            <label class="slds-form-element__label" for="BillingCycle">
+              Billing Cycle <span class="slds-required">*</span>
+            </label>
+            <div class="slds-form-element__control">
+              <select id="BillingCycle" name="BillingCycle" class="slds-select">
+                <option value="">-- Select Billing Cycle --</option>
+                <option value="Monthly">Monthly</option>
+                <option value="Quarterly">Quarterly</option>
+                <option value="Annually">Annually</option>
+              </select>
+            </div>
+            <div class="slds-form-element__help" id="err-BillingCycle">Please select a billing cycle.</div>
+          </div>
+        </div>
+
+        <div class="slds-form-element" data-omni-key="TermsAccepted" style="margin-top: 0.5rem;">
+          <label class="slds-checkbox-container" for="TermsAccepted">
+            <input type="checkbox" id="TermsAccepted" name="TermsAccepted" />
+            <span class="slds-checkbox-label">
+              I accept the Telecom Service Terms &amp; Conditions and authorize billing activation. <span class="slds-required">*</span>
+            </span>
+          </label>
+          <div class="slds-form-element__help" id="err-TermsAccepted">Terms and Conditions must be accepted to proceed.</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         STEP 4: ReviewSubmitStep
+         ══════════════════════════════════════════════════════════ -->
+    <section class="omni-step-body step-page" id="step4">
+      <h2 class="step-section-heading">Step 4: Review &amp; Submit</h2>
+      <p class="step-section-desc">Review order configuration prior to initiating Integration Procedure <code>IPCreateTelecomCustomer</code>.</p>
+
+      <table class="review-summary-table">
+        <tbody>
+          <tr>
+            <th>Customer Name:</th>
+            <td id="revCustomerName">--</td>
+          </tr>
+          <tr>
+            <th>Email &amp; Mobile:</th>
+            <td id="revContact">--</td>
+          </tr>
+          <tr>
+            <th>Customer Type:</th>
+            <td id="revCustomerType">--</td>
+          </tr>
+          <tr>
+            <th>Plan &amp; Service:</th>
+            <td id="revPlan">--</td>
+          </tr>
+          <tr>
+            <th>Connections &amp; Type:</th>
+            <td id="revConnections">--</td>
+          </tr>
+          <tr>
+            <th>Billing Address:</th>
+            <td id="revAddress">--</td>
+          </tr>
+          <tr>
+            <th>Payment &amp; Cycle:</th>
+            <td id="revPayment">--</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="slds-form-element" data-omni-key="ConfirmDetails" style="margin-top: 1rem;">
+        <label class="slds-checkbox-container" for="ConfirmDetails">
+          <input type="checkbox" id="ConfirmDetails" name="ConfirmDetails" />
+          <span class="slds-checkbox-label">
+            <strong>Confirm Details:</strong> I confirm that all the information provided is correct. <span class="slds-required">*</span>
+          </span>
+        </label>
+        <div class="slds-form-element__help" id="err-ConfirmDetails">You must check Confirm Details prior to submitting the order.</div>
+      </div>
+    </section>
+
+    <!-- ══════════════════════════════════════════════════════════
+         STEP 5: ConfirmationStep
+         ══════════════════════════════════════════════════════════ -->
+    <section class="omni-step-body step-page" id="step5">
+      <div class="confirmation-banner">
+        <div class="confirmation-icon">✓</div>
+        <h2 class="confirmation-heading" data-omni-key="SuccessHeading" id="SuccessHeading">
+          Your onboarding is successful!
+        </h2>
+        <p class="confirmation-message" data-omni-key="ConfirmationMessage" id="ConfirmationMessage">
+          Your telecom customer onboarding has been provisioned and IPCreateTelecomCustomer Integration Procedure executed successfully.
+        </p>
+
+        <div class="reference-pill" data-omni-key="ReferenceNumber">
+          <div class="reference-label">Customer Service Reference Number</div>
+          <div class="reference-number" id="ReferenceNumber">QX-98421</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ── OmniScript Action Footer ── -->
+    <footer class="omni-footer" id="omniFooter">
+      <button type="button" class="slds-button slds-button_neutral" id="btnPrevious" style="display: none;" onclick="goToPrevStep()">
+        Previous
+      </button>
+      <button type="button" class="slds-button slds-button_brand" id="btnNext" onclick="goToNextStep()">
+        Next
+      </button>
+    </footer>
+
+  </main>
+
+  <script>
+    // Parse simulation parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const simulateUiChange = urlParams.get('simulateUiChange') === 'true';
+    const simulateBug = urlParams.get('simulateBug') === 'true';
+
+    // State machine
+    let currentStepIndex = 1;
+    const totalSteps = 5;
+
+    // Elements
+    const spinner = document.getElementById('omniSpinner');
+    const spinnerText = document.getElementById('spinnerText');
+    const btnNext = document.getElementById('btnNext');
+    const btnPrev = document.getElementById('btnPrevious');
+    const simBanner = document.getElementById('simulationBanner');
+
+    // Initialize Simulation UI Mode
+    if (simulateUiChange) {
+      if (simBanner) {
+        simBanner.style.display = 'flex';
+        simBanner.className = 'simulation-banner ui-change';
+        simBanner.innerHTML = `
+          <div>
+            <span class="sim-tag">Agent 04 &amp; 05 Test</span>
+            <strong>⚡ SIMULATION ACTIVE: UI Drift Injected</strong> — Step 1 Email element was renamed from <code>EmailAddress</code> to <code>PrimaryContactEmail</code>. Old test selectors will fail and trigger Self-Healing!
+          </div>
+          <span style="font-size: 0.8rem; opacity: 0.8;">[?simulateUiChange=true]</span>
+        `;
+      }
+
+      // Rename EmailAddress to PrimaryContactEmail
+      const emailElem = document.getElementById('emailFormElement');
+      if (emailElem) {
+        emailElem.setAttribute('data-omni-key', 'PrimaryContactEmail');
+        emailElem.innerHTML = `
+          <label class="slds-form-element__label" for="PrimaryContactEmail" id="emailLabel">
+            Primary Contact Email <span class="slds-required">*</span>
+          </label>
+          <div class="slds-form-element__control">
+            <input type="email" id="PrimaryContactEmail" name="PrimaryContactEmail" class="slds-input" placeholder="primary.contact@example.com" />
+          </div>
+          <div class="slds-form-element__help" id="err-PrimaryContactEmail">Please enter a valid primary contact email.</div>
+        `;
+      }
+    } else if (simulateBug) {
+      if (simBanner) {
+        simBanner.style.display = 'flex';
+        simBanner.className = 'simulation-banner defect';
+        simBanner.innerHTML = `
+          <div>
+            <span class="sim-tag">Agent 06 Test</span>
+            <strong>🐛 SIMULATION ACTIVE: Functional Defect Injected</strong> — Step 3 <code>TermsAccepted</code> validation rule is bypassed in OmniScript. Negative test will fail and trigger Defect Bug Report!
+          </div>
+          <span style="font-size: 0.8rem; opacity: 0.8;">[?simulateBug=true]</span>
+        `;
+      }
+    }
+
+    function showSpinner(text, duration = 300) {
+      spinnerText.innerText = text || 'Loading...';
+      spinner.style.display = 'flex';
+      return new Promise((resolve) => setTimeout(() => {
+        spinner.style.display = 'none';
+        resolve();
+      }, duration));
+    }
+
+    function clearErrors(stepNum) {
+      const stepElem = document.getElementById('step' + stepNum);
+      if (!stepElem) return;
+      const errorElements = stepElem.querySelectorAll('.slds-has-error');
+      errorElements.forEach((el) => el.classList.remove('slds-has-error'));
+    }
+
+    function setError(elementName, isError) {
+      const container = document.querySelector(`[data-omni-key="${elementName}"]`);
+      if (!container) return;
+      if (isError) {
+        container.classList.add('slds-has-error');
+      } else {
+        container.classList.remove('slds-has-error');
+      }
+    }
+
+    function validateStep1() {
+      clearErrors(1);
+      let isValid = true;
+
+      const first = document.getElementById('FirstName').value.trim();
+      const last = document.getElementById('LastName').value.trim();
+      const mobile = document.getElementById('MobileNumber').value.trim();
+      const type = document.getElementById('CustomerType').value;
+
+      let email = '';
+      if (simulateUiChange) {
+        const primaryInput = document.getElementById('PrimaryContactEmail');
+        email = primaryInput ? primaryInput.value.trim() : '';
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) {
+          setError('PrimaryContactEmail', true);
+          isValid = false;
+        }
+      } else {
+        const emailInput = document.getElementById('Email') || document.getElementById('EmailAddress');
+        email = emailInput ? emailInput.value.trim() : '';
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!email || !emailRegex.test(email)) {
+          if (document.getElementById('err-Email')) setError('Email', true);
+          if (document.getElementById('err-EmailAddress')) setError('EmailAddress', true);
+          isValid = false;
+        }
+      }
+
+      if (!first) { setError('FirstName', true); isValid = false; }
+      if (!last) { setError('LastName', true); isValid = false; }
+
+      // Mobile validation (exactly 10 digits)
+      const mobileRegex = /^\d{10}$/;
+      if (!mobile || !mobileRegex.test(mobile)) {
+        setError('MobileNumber', true);
+        isValid = false;
+      }
+
+      if (!type) { setError('CustomerType', true); isValid = false; }
+
+      return isValid;
+    }
+
+    function validateStep2() {
+      clearErrors(2);
+      let isValid = true;
+
+      const service = document.getElementById('ServiceType').value;
+      const plan = document.getElementById('TelecomPlan').value;
+      const conn = document.getElementById('ConnectionType').value;
+      const count = parseInt(document.getElementById('NumberOfConnections').value, 10);
+
+      if (!service) { setError('ServiceType', true); isValid = false; }
+      if (!plan) { setError('TelecomPlan', true); isValid = false; }
+      if (!conn) { setError('ConnectionType', true); isValid = false; }
+      if (isNaN(count) || count < 1) { setError('NumberOfConnections', true); isValid = false; }
+
+      return isValid;
+    }
+
+    function validateStep3() {
+      clearErrors(3);
+      let isValid = true;
+
+      const addr = document.getElementById('BillingAddress').value.trim();
+      const city = document.getElementById('BillingCity').value.trim();
+      const postal = document.getElementById('BillingPostalCode').value.trim();
+      const method = document.getElementById('PaymentMethod').value;
+      const cycle = document.getElementById('BillingCycle').value;
+      const terms = document.getElementById('TermsAccepted').checked;
+
+      if (!addr) { setError('BillingAddress', true); isValid = false; }
+      if (!city) { setError('BillingCity', true); isValid = false; }
+      if (!postal) { setError('BillingPostalCode', true); isValid = false; }
+      if (!method) { setError('PaymentMethod', true); isValid = false; }
+      if (!cycle) { setError('BillingCycle', true); isValid = false; }
+
+      // Terms validation (bypassed if simulateBug=true)
+      if (!terms) {
+        if (simulateBug) {
+          console.warn('[SIMULATION BUG] TermsAccepted mandatory validation was bypassed!');
+        } else {
+          setError('TermsAccepted', true);
+          isValid = false;
+        }
+      }
+
+      return isValid;
+    }
+
+    function validateStep4() {
+      clearErrors(4);
+      let isValid = true;
+      const confirmed = document.getElementById('ConfirmDetails').checked;
+      if (!confirmed) {
+        setError('ConfirmDetails', true);
+        isValid = false;
+      }
+      return isValid;
+    }
+
+    function populateReviewSummary() {
+      const first = document.getElementById('FirstName').value.trim() || 'Rahul';
+      const last = document.getElementById('LastName').value.trim() || 'Sharma';
+      const emailElem = document.getElementById('PrimaryContactEmail') || document.getElementById('Email') || document.getElementById('EmailAddress');
+      const email = (emailElem && emailElem.value.trim()) ? emailElem.value.trim() : 'rahul.sharma@example.com';
+      const mobile = document.getElementById('MobileNumber').value.trim() || '9876543210';
+      const type = document.getElementById('CustomerType').value || 'New';
+
+      const service = document.getElementById('ServiceType').value || 'Mobile';
+      const plan = document.getElementById('TelecomPlan').value || 'Premium 5G';
+      const conn = document.getElementById('ConnectionType').value || 'Prepaid';
+      const count = document.getElementById('NumberOfConnections').value || '1';
+
+      const addr = document.getElementById('BillingAddress').value.trim() || '100 MG Road';
+      const city = document.getElementById('BillingCity').value.trim() || 'Bengaluru';
+      const postal = document.getElementById('BillingPostalCode').value.trim() || '560001';
+      const method = document.getElementById('PaymentMethod').value || 'UPI';
+      const cycle = document.getElementById('BillingCycle').value || 'Monthly';
+
+      document.getElementById('revCustomerName').innerText = `${first} ${last}`;
+      document.getElementById('revContact').innerText = `${email} · ${mobile}`;
+      document.getElementById('revCustomerType').innerText = type;
+      document.getElementById('revPlan').innerText = `${service} (${plan})`;
+      document.getElementById('revConnections').innerText = `${count} Connection(s) · ${conn}`;
+      document.getElementById('revAddress').innerText = `${addr}, ${city} - ${postal}`;
+      document.getElementById('revPayment').innerText = `${method} · ${cycle}`;
+    }
+
+    async function goToNextStep() {
+      // Validate current step
+      if (currentStepIndex === 1 && !validateStep1()) return;
+      if (currentStepIndex === 2 && !validateStep2()) return;
+      if (currentStepIndex === 3 && !validateStep3()) return;
+      if (currentStepIndex === 4 && !validateStep4()) return;
+
+      if (currentStepIndex === 3) {
+        populateReviewSummary();
+      }
+
+      if (currentStepIndex === 4) {
+        // Trigger Integration Procedure IPCreateTelecomCustomer
+        await showSpinner('Executing Integration Procedure: IPCreateTelecomCustomer...', 500);
+        // Generate random reference number
+        const randomRef = 'QX-' + Math.floor(10000 + Math.random() * 90000);
+        document.getElementById('ReferenceNumber').innerText = randomRef;
+      } else {
+        await showSpinner('Transitioning OmniScript step...', 300);
+      }
+
+      setStep(currentStepIndex + 1);
+    }
+
+    async function goToPrevStep() {
+      if (currentStepIndex > 1) {
+        await showSpinner('Returning to previous step...', 200);
+        setStep(currentStepIndex - 1);
+      }
+    }
+
+    function setStep(newIndex) {
+      if (newIndex < 1 || newIndex > totalSteps) return;
+
+      // Update pages
+      document.querySelectorAll('.step-page').forEach((p) => p.classList.remove('active'));
+      const activePage = document.getElementById('step' + newIndex);
+      if (activePage) activePage.classList.add('active');
+
+      // Update Stepper markers
+      for (let i = 1; i <= totalSteps; i++) {
+        const prog = document.getElementById('progStep' + i);
+        if (!prog) continue;
+        prog.classList.remove('active', 'completed');
+        if (i < newIndex) {
+          prog.classList.add('completed');
+          prog.querySelector('.slds-progress-marker').innerText = '✓';
+        } else if (i === newIndex) {
+          prog.classList.add('active');
+          prog.querySelector('.slds-progress-marker').innerText = String(i);
+        } else {
+          prog.querySelector('.slds-progress-marker').innerText = String(i);
+        }
+      }
+
+      currentStepIndex = newIndex;
+
+      // Update buttons
+      btnPrev.style.display = (currentStepIndex > 1 && currentStepIndex < 5) ? 'inline-block' : 'none';
+
+      if (currentStepIndex === 4) {
+        btnNext.innerText = 'Submit';
+        btnNext.style.display = 'inline-block';
+      } else if (currentStepIndex === 5) {
+        btnNext.style.display = 'none';
+        btnPrev.style.display = 'none';
+      } else {
+        btnNext.innerText = 'Next';
+        btnNext.style.display = 'inline-block';
+      }
+
+      // Scroll container to top
+      document.getElementById('omniScriptContainer').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  </script>
+</body>
+</html>

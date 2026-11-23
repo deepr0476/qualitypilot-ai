@@ -1,0 +1,32 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-11-20T04:42:11.294Z",
+  "locators": {
+    "Lead.LastName.input": {
+      "selector": "input[name=\"lastName\"]",
+      "strategy": "nameAttribute",
+      "successCount": 1
+    },
+    "Lead.Company.input": {
+      "selector": "input[name=\"Company\"]",
+      "strategy": "nameAttribute",
+      "successCount": 1
+    },
+    "Global.Save.button": {
+      "selector": "button[name=\"SaveEdit\"], footer button.slds-button_brand, button:has-text(\"Save\")",
+      "strategy": "semanticRole",
+      "successCount": 1
+    },
+    "Global.New.button": {
+      "selector": "a[title=\"New\"], button:has-text(\"New\"), button[name=\"New\"]",
+      "strategy": "titleOrText",
+      "successCount": 1
+    },
+    "Quote.EditLines.button": {
+      "selector": "button:has-text(\"Edit Lines\")",
+      "strategy": "semanticRole",
+      "successCount": 2,
+      "lastSuccess": "2026-11-20T04:42:11.293Z"
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "qualitypilot-backend",
+  "version": "1.0.0",
+  "description": "QualityPilot AI — Playwright-based Salesforce QA automation backend",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js",
+    "save-auth": "node save-auth.js"
+  },
+  "keywords": [
+    "playwright",
+    "salesforce",
+    "qa",
+    "automation"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@faker-js/faker": "^10.6.0",
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.21.1",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.10",
+    "express": "^5.3.0",
+    "jsforce": "^3.13.1",
+    "jsonwebtoken": "^9.0.3",
+    "pdfkit": "^0.21.0",
+    "playwright": "^1.65.1"
+  }
+}
