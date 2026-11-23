@@ -1912,28 +1912,29 @@ app.post('/api/execute-tests', async (req, res) => {
   let browser;
 
   try {
-    const isHeadless = process.env.PLAYWRIGHT_HEADLESS === 'true';
-    browser = await chromium.launch({
-      headless: isHeadless,
-      slowMo: 450,
-      args: ['--start-maximized', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-    });
-
-    const videosDir = path.join(EVIDENCE_DIR, 'videos');
-    if (!fs.existsSync(videosDir)) fs.mkdirSync(videosDir, { recursive: true });
-
-    // Launch Playwright with a completely fresh browser context (WITHOUT auth.json storageState)
-    // to prevent ERR_TOO_MANY_REDIRECTS caused by stale session/login cookies
-    const contextOptions = {
-      viewport: { width: 1440, height: 900 },
-      ignoreHTTPSErrors: true,
-      recordVideo: {
-        dir: videosDir,
-        size: { width: 1280, height: 720 },
-      },
-    };
-
-    const browserContext = await browser.newContext(contextOptions);
+    let isCdp = false;
+    let browserContext;
+    try {
+      browser = await chromium.connectOverCDP('http://localhost:9222', { timeout: 1500 });
+      console.log('[Playwright] 🎯 Successfully connected directly to your live Chrome session via CDP (port 9222)!');
+      isCdp = true;
+      browserContext = browser.contexts()[0] || (await browser.newContext());
+    } catch (_) {
+      browser = await chromium.launch({
+        headless: isHeadless,
+        slowMo: 450,
+        args: ['--start-maximized', '--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+      });
+      const contextOptions = {
+        viewport: { width: 1440, height: 900 },
+        ignoreHTTPSErrors: true,
+        recordVideo: {
+          dir: videosDir,
+          size: { width: 1280, height: 720 },
+        },
+      };
+      browserContext = await browser.newContext(contextOptions);
+    }
     const sfSkills = new SalesforceSkills({ salesforceUrl });
     await sfSkills.init();
     const PORT = process.env.PORT || 4000;
@@ -1991,8 +1992,39 @@ app.post('/api/execute-tests', async (req, res) => {
         healingAnalysis: null,
       };
 
-      const page = await browserContext.newPage();
-      let pageNavigated = false;
+      let page;
+      if (isCdp) {
+        const existingPages = browserContext.pages();
+        const omniPage = existingPages.find((p) => p.url().includes('builder_omnistudio') || p.url().includes('omnistudioBuilder') || p.url().includes('OmniScript'));
+        if (omniPage) {
+          page = omniPage;
+          console.log(`[Playwright CDP] 🎯 Reusing active OmniStudio tab in Chrome: ${page.url()}`);
+        } else {
+          page = existingPages[0] || (await browserContext.newPage());
+          console.log(`[Playwright CDP] Navigating Chrome tab to OmniStudio Builder...`);
+          await page.goto(
+            salesforceUrl.includes('builder_omnistudio')
+              ? salesforceUrl
+              : 'https://selflearning.lightning.force.com/builder_omnistudio/omnistudioBuilder.app?type=omniscript&id=0jNdN000001EYVtUAO',
+            { waitUntil: 'domcontentloaded', timeout: 45000 }
+          );
+        }
+        await page.bringToFront();
+        pageNavigated = true;
+
+        // If the Preview button is visible on designer canvas, click Preview to enter execution mode
+        try {
+          const previewBtn = page.locator('button:has-text("Preview"), .slds-button:has-text("Preview")').first();
+          if (await previewBtn.isVisible({ timeout: 2500 }).catch(() => false)) {
+            console.log('[Playwright CDP] Clicking "Preview" button on OmniStudio Designer canvas...');
+            await previewBtn.click();
+            await page.waitForTimeout(3000);
+          }
+        } catch (_) {}
+      } else {
+        page = await browserContext.newPage();
+      }
+      let pageNavigatedStatus = pageNavigated;
 
       const isMockUrl = isExplicitLiveMode ? false : /localhost|127\.0\.0\.1|mock-omniscript/i.test(salesforceUrl);
       const isRemoteSalesforce = isExplicitLiveMode ? true : (/salesforce\.com|force\.com/i.test(salesforceUrl) || !isMockUrl);
@@ -2000,7 +2032,7 @@ app.post('/api/execute-tests', async (req, res) => {
 
       // Enforce: When target URL is remote Salesforce/Force.com or executionMode is 'live',
       // completely bypass mock endpoints and force Playwright to launch directly against the remote authenticated Salesforce via Frontdoor token chain
-      const shouldFrontdoor = !isPureApi && (isExplicitLiveMode || (isRemoteSalesforce && !isMockUrl));
+      const shouldFrontdoor = !isCdp && !isPureApi && (isExplicitLiveMode || (isRemoteSalesforce && !isMockUrl));
       if (shouldFrontdoor && activeConn && activeConn.accessToken && activeConn.instanceUrl) {
         try {
           let cleanRetPath = '/lightning/page/home';
