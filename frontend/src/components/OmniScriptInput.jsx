@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import AgentSwarmMatrix from './AgentSwarmMatrix'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'
 
@@ -459,6 +460,9 @@ export default function OmniScriptInput({
 
   return (
     <div className="omniscript-input-container">
+      {/* ── 6-Agent Executive Swarm Matrix ─────────────────────────── */}
+      <AgentSwarmMatrix currentStage="ANALYZE" loading={loading} />
+
       {/* ── Form Card ──────────────────────────────────────────────── */}
       <div className="card form-card">
         <div className="card-header" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '10px' }}>

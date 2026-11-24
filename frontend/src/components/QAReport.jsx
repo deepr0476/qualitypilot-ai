@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { downloadPlaywrightSpecFile } from '../utils/playwrightExporter'
+import AgentSwarmMatrix from './AgentSwarmMatrix'
+import CodeXSelfHealingPanel from './CodeXSelfHealingPanel'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'
 
@@ -112,6 +114,9 @@ export default function QAReport({
 
   return (
     <div className="report-container">
+      {/* ── 6-Agent Executive Swarm Matrix ── */}
+      <AgentSwarmMatrix currentStage={downloadingPdf ? 'REPORT' : 'REPORT'} />
+
       {/* ── Top Header ─────────────────────────────────────────────── */}
       <div className="report-header card">
         <div className="header-left">
@@ -745,6 +750,9 @@ export default function QAReport({
           )
         })}
       </div>
+
+      {/* ── CodeX Automated Self-Healing Monitor ── */}
+      <CodeXSelfHealingPanel liveLogs={results?.flatMap((r) => r.stepLogs || [])} />
 
       {/* ── Lightbox Modal for Screenshots ─────────────────────────── */}
       {selectedScreenshot && (

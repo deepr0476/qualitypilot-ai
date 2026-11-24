@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import { downloadPlaywrightSpecFile } from '../utils/playwrightExporter'
+import AgentSwarmMatrix from './AgentSwarmMatrix'
+import CodeXSelfHealingPanel from './CodeXSelfHealingPanel'
 
 export default function TestCasePanel({
   omniScriptData,
@@ -78,6 +80,9 @@ export default function TestCasePanel({
 
   return (
     <div className="test-case-panel">
+      {/* ── 6-Agent Executive Swarm Matrix ── */}
+      <AgentSwarmMatrix currentStage={loading ? 'RUN' : 'DESIGN'} loading={loading} />
+
       {/* ── Review Gate Header ─────────────────────────────────────── */}
       <div className="panel-header card review-gate-card">
         <div className="gate-title-group">
@@ -325,6 +330,8 @@ export default function TestCasePanel({
           </div>
         ))}
       </div>
+      {/* ── CodeX Automated Self-Healing Monitor ── */}
+      <CodeXSelfHealingPanel />
     </div>
   )
 }
